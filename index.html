@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ToM - Discord Post Manager & Calculator</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Font: Inter & Cinzel -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            maritime: {
+              900: '#0B1320',
+              800: '#111C2E',
+              700: '#1A2942',
+              600: '#253B5E',
+              accent: '#D4AF37',
+              goldHover: '#B59226',
+              pirateRed: '#8B0000',
+              wood: '#2C1D11'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            cinzel: ['Cinzel', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0B1320;
+      color: #E2E8F0;
+    }
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #FFF099 0%, #D4AF37 50%, #AA7C11 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gold-border {
+      border-color: #D4AF37;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #111C2E;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #253B5E;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #D4AF37;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col custom-scrollbar">
+
+  <!-- Header -->
+  <header class="bg-maritime-800 border-b border-maritime-600/50 sticky top-0 z-50 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-yellow-700 flex items-center justify-center text-maritime-900 font-cinzel font-bold text-xl shadow-md border border-amber-200">
+          ToM
+        </div>
+        <div>
+          <h1 class="text-2xl font-cinzel font-bold gold-gradient-text tracking-wide">Transport of Materials</h1>
+          <p id="txt-subtitle" class="text-xs text-slate-400 font-medium" data-i18n="subtitle">Gestor de Discord & Cotizador Oficial (Servidor NA1)</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <!-- Language Switcher Buttons Top -->
+        <div class="flex items-center gap-1 bg-maritime-900/90 p-1 rounded-xl border border-maritime-600/40">
+          <button id="lang-btn-es" onclick="setAppLanguage('es')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-400 text-maritime-900 shadow">ES</button>
+          <button id="lang-btn-en" onclick="setAppLanguage('en')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">EN</button>
+        </div>
+
+        <!-- Nav Tabs -->
+        <div class="flex items-center gap-1 bg-maritime-900/80 p-1.5 rounded-xl border border-maritime-600/40">
+          <button id="tab-calc-btn" onclick="switchTab('calculator')" class="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 bg-maritime-accent text-maritime-900 shadow">
+            <i class="fa-solid fa-calculator"></i> <span data-i18n="navCalc">Cotizador</span>
+          </button>
+          <button id="tab-posts-btn" onclick="switchTab('posts')" class="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 text-slate-300 hover:text-white hover:bg-maritime-700">
+            <i class="fa-brands fa-discord"></i> <span data-i18n="navPosts">Plantillas Discord</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- TAB 1: CALCULATOR -->
+    <div id="calculator-section" class="space-y-8">
+      
+      <!-- Top Banner Notice -->
+      <div class="bg-maritime-800/80 border border-amber-500/30 rounded-2xl p-4 flex items-center gap-4 shadow-md">
+        <div class="p-3 bg-amber-500/10 rounded-xl text-amber-400 shrink-0">
+          <i class="fa-solid fa-coins text-2xl"></i>
+        </div>
+        <div class="text-sm">
+          <span class="font-semibold text-amber-400" data-i18n="bannerTitle">Valores Base de Referencia:</span>
+          <span class="text-slate-300 ml-1" data-i18n="bannerDesc">1 Cofre = <strong>490 Oro</strong> | Capacidad Comercial Neta: <strong>70 Toneladas</strong> (reservando 9.2tn para provisiones).</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Form Inputs -->
+        <div class="lg:col-span-7 space-y-6 bg-maritime-800 border border-maritime-600/40 rounded-2xl p-6 shadow-xl">
+          <h2 class="text-xl font-cinzel font-bold text-amber-400 border-b border-maritime-600/50 pb-3 flex items-center gap-2">
+            <i class="fa-solid fa-sliders"></i> <span data-i18n="paramsTitle">Parámetros del Viaje</span>
+          </h2>
+
+          <!-- Distance Input -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-200 mb-2 flex justify-between">
+              <span><i class="fa-solid fa-route text-amber-400 mr-2"></i><span data-i18n="labelDistance">Distancia del Recorrido (KM)</span></span>
+              <span id="dist-val-display" class="text-amber-400 font-mono font-bold">10 km</span>
+            </label>
+            <div class="flex gap-4 items-center">
+              <input type="range" id="input-distance" min="1" max="100" value="10" step="1" oninput="calculateQuote()" class="w-full h-2 bg-maritime-900 rounded-lg appearance-none cursor-pointer accent-amber-400">
+              <input type="number" id="input-distance-num" min="1" max="500" value="10" oninput="syncDistanceInput(this.value)" class="w-24 bg-maritime-900 border border-maritime-600 rounded-lg px-3 py-1.5 text-center font-mono font-bold text-amber-400 focus:outline-none focus:border-amber-400">
+            </div>
+          </div>
+
+          <!-- Cargo Type -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-200 mb-2">
+              <i class="fa-solid fa-weight-hanging text-amber-400 mr-2"></i><span data-i18n="labelCargoType">Tipo de Carga</span>
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="cursor-pointer">
+                <input type="radio" name="cargo-type" value="full" checked onchange="calculateQuote()" class="peer sr-only">
+                <div class="p-3 bg-maritime-900 border border-maritime-600 rounded-xl peer-checked:border-amber-400 peer-checked:bg-amber-400/10 transition-all flex flex-col gap-1">
+                  <span class="font-bold text-sm text-slate-100"><i class="fa-solid fa-ship mr-1 text-amber-400"></i> <span data-i18n="cargoFullTitle">Carga Completa (70 tn)</span></span>
+                  <span class="text-xs text-slate-400" data-i18n="cargoFullSub">5 Cofres / km (2.450 Oro/km)</span>
+                </div>
+              </label>
+
+              <label class="cursor-pointer">
+                <input type="radio" name="cargo-type" value="partial" onchange="calculateQuote()" class="peer sr-only">
+                <div class="p-3 bg-maritime-900 border border-maritime-600 rounded-xl peer-checked:border-amber-400 peer-checked:bg-amber-400/10 transition-all flex flex-col gap-1">
+                  <span class="font-bold text-sm text-slate-100"><i class="fa-solid fa-box mr-1 text-amber-400"></i> <span data-i18n="cargoPartTitle">Carga Parcial (1-35 tn)</span></span>
+                  <span class="text-xs text-slate-400" data-i18n="cargoPartSub">3 Cofres / km (1.470 Oro/km)</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Return Mode -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-200 mb-2">
+              <i class="fa-solid fa-arrows-rotate text-amber-400 mr-2"></i><span data-i18n="labelReturnMode">Modalidad de Retorno</span>
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="cursor-pointer">
+                <input type="radio" name="return-mode" value="empty" checked onchange="calculateQuote()" class="peer sr-only">
+                <div class="p-3 bg-maritime-900 border border-maritime-600 rounded-xl peer-checked:border-amber-400 peer-checked:bg-amber-400/10 transition-all flex flex-col gap-1">
+                  <span class="font-bold text-sm text-slate-100" data-i18n="returnEmptyTitle">Ida Cargado / Regreso Vacío</span>
+                  <span class="text-xs text-slate-400" data-i18n="returnEmptySub">+50% tarifa km retorno (2.5 cofres/km)</span>
+                </div>
+              </label>
+
+              <label class="cursor-pointer">
+                <input type="radio" name="return-mode" value="loaded" onchange="calculateQuote()" class="peer sr-only">
+                <div class="p-3 bg-maritime-900 border border-maritime-600 rounded-xl peer-checked:border-amber-400 peer-checked:bg-amber-400/10 transition-all flex flex-col gap-1">
+                  <span class="font-bold text-sm text-slate-100" data-i18n="returnLoadedTitle">Ida y Vuelta Cargado</span>
+                  <span class="text-xs text-slate-400" data-i18n="returnLoadedSub">20% Descuento en km retorno (4 cofres/km)</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Extra Ports -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-200 mb-2 flex justify-between">
+              <span><i class="fa-solid fa-anchor text-amber-400 mr-2"></i><span data-i18n="labelExtraPorts">Puertos Adicionales / Escalas</span></span>
+              <span id="extra-ports-display" class="text-amber-400 font-mono font-bold">0 Extra</span>
+            </label>
+            <select id="input-extra-ports" onchange="calculateQuote()" class="w-full bg-maritime-900 border border-maritime-600 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-amber-400">
+              <option value="0" data-i18n="portOpt0">Solo Puerto Destino Directo (+0 Cofres)</option>
+              <option value="1" data-i18n="portOpt1">1 Puerto Adicional (+1 Cofre / 490 Oro)</option>
+              <option value="2" data-i18n="portOpt2">2 Puertos Adicionales (+2 Cofres / 980 Oro)</option>
+              <option value="3" data-i18n="portOpt3">3 Puertos Adicionales (+3 Cofres / 1.470 Oro)</option>
+              <option value="4" data-i18n="portOpt4">4 Puertos Adicionales (+4 Cofres / 1.960 Oro)</option>
+            </select>
+          </div>
+
+          <!-- Toggles: PvP Zone & Pirate Procurement -->
+          <div class="space-y-4 pt-2 border-t border-maritime-600/40">
+            
+            <!-- PvP Coverage -->
+            <div class="flex items-center justify-between p-3 bg-maritime-900/60 rounded-xl border border-maritime-600/40">
+              <div>
+                <span class="font-semibold text-sm text-slate-100 flex items-center gap-2">
+                  <i class="fa-solid fa-shield-halved text-amber-400"></i> <span data-i18n="pvpTitle">Cobertura Zona PvP</span>
+                </span>
+                <span class="text-xs text-slate-400 block" data-i18n="pvpSub">Tratado de Paz + Seguro de Viaje (+4 Cofres fijación ida/vuelta)</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="toggle-pvp" checked onchange="calculateQuote()" class="sr-only peer">
+                <div class="w-11 h-6 bg-maritime-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-400"></div>
+              </label>
+            </div>
+
+            <!-- Pirate Agent Toggle -->
+            <div class="p-3 bg-maritime-900/60 rounded-xl border border-maritime-600/40 space-y-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="font-semibold text-sm text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-skull-crossbones text-amber-400"></i> <span data-i18n="pirateTitle">Agente de Compras Pirata</span>
+                  </span>
+                  <span class="text-xs text-slate-400 block" data-i18n="pirateSub">Adquisición en puerto restringido + Entrega Barco a Barco (+15% comisión)</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="toggle-pirate" onchange="togglePirateInput(); calculateQuote();" class="sr-only peer">
+                  <div class="w-11 h-6 bg-maritime-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-400"></div>
+                </label>
+              </div>
+
+              <!-- Pirate Material Cost Sub-input -->
+              <div id="pirate-cost-container" class="hidden pt-2 border-t border-maritime-600/30">
+                <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="pirateInputLabel">Costo de Materiales en Puerto Restringido (en Oro):</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs"><i class="fa-solid fa-coins text-amber-400"></i></span>
+                  <input type="number" id="input-pirate-material-cost" value="10000" min="0" step="500" oninput="calculateQuote()" class="w-full bg-maritime-900 border border-maritime-600 rounded-lg pl-8 pr-3 py-1.5 text-sm text-slate-100 font-mono focus:outline-none focus:border-amber-400">
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Right Column: Results & Output -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <div class="bg-maritime-800 border-2 gold-border rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
+
+            <h3 class="text-lg font-cinzel font-bold text-amber-400 border-b border-maritime-600/50 pb-3 flex items-center justify-between">
+              <span><i class="fa-solid fa-receipt mr-2"></i><span data-i18n="receiptTitle">Desglose de Cotización</span></span>
+              <span class="text-xs font-sans font-normal text-slate-400 bg-maritime-900 px-2.5 py-1 rounded-md border border-maritime-600">Oficial ToM</span>
+            </h3>
+
+            <!-- Itemized list -->
+            <div class="space-y-3 py-4 text-sm border-b border-maritime-600/50">
+              
+              <div class="flex justify-between items-center text-slate-300">
+                <span data-i18n="resDistLabel">Distancia Total Recorrida:</span>
+                <span id="out-dist-km" class="font-mono text-slate-100">20 km</span>
+              </div>
+
+              <div class="flex justify-between items-center text-slate-300">
+                <span data-i18n="resDistanceFeeLabel">Flete por Distancia:</span>
+                <span id="out-flete-cost" class="font-mono text-slate-100">75 Cofres</span>
+              </div>
+
+              <div class="flex justify-between items-center text-slate-300">
+                <span data-i18n="resStopsLabel">Escalas Adicionales:</span>
+                <span id="out-stops-cost" class="font-mono text-slate-100">0 Cofres</span>
+              </div>
+
+              <div class="flex justify-between items-center text-slate-300">
+                <span data-i18n="resPvpLabel">Tasa Cobertura PvP (Tratado/Seguro):</span>
+                <span id="out-pvp-cost" class="font-mono text-slate-100">4 Cofres</span>
+              </div>
+
+              <div id="out-pirate-row" class="hidden flex justify-between items-center text-amber-300 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                <span data-i18n="resPirateLabel">Materiales + Comisión Pirata (15%):</span>
+                <span id="out-pirate-cost" class="font-mono font-bold">11,500 Oro</span>
+              </div>
+
+            </div>
+
+            <!-- Grand Totals -->
+            <div class="pt-4 space-y-3">
+              <div>
+                <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold" data-i18n="totalChestsLabel">Total en Cofres:</span>
+                <div class="text-3xl font-extrabold text-amber-400 font-mono tracking-tight" id="out-total-chests">
+                  79 <span class="text-sm font-normal text-slate-400" data-i18n="chestWord">Cofres</span>
+                </div>
+              </div>
+
+              <div>
+                <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold" data-i18n="totalGoldLabel">Total en Oro Equivalente:</span>
+                <div class="text-2xl font-bold text-slate-100 font-mono tracking-tight" id="out-total-gold">
+                  38,710 <span class="text-xs font-normal text-amber-400">ORO</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Copy Quote Buttons -->
+            <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button onclick="copyQuoteToClipboard('es')" class="py-3 px-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-maritime-900 font-bold rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wide">
+                <i class="fa-solid fa-copy"></i> <span data-i18n="btnCopyEs">Copiar (ES)</span>
+              </button>
+              <button onclick="copyQuoteToClipboard('en')" class="py-3 px-4 bg-maritime-900 hover:bg-maritime-700 text-amber-400 border border-amber-500/40 font-bold rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wide">
+                <i class="fa-solid fa-globe"></i> <span data-i18n="btnCopyEn">Copy Quote (EN)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Discord Output Preview -->
+          <div class="bg-maritime-800 border border-maritime-600/40 rounded-2xl p-4 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block" data-i18n="previewTitle">Vista Previa del Mensaje Discord:</span>
+              <div class="flex gap-2">
+                <button onclick="setPreviewLang('es')" id="prev-lang-es" class="text-[10px] px-2 py-0.5 rounded bg-amber-400 text-maritime-900 font-bold">ES</button>
+                <button onclick="setPreviewLang('en')" id="prev-lang-en" class="text-[10px] px-2 py-0.5 rounded bg-maritime-900 text-slate-400 border border-maritime-600">EN</button>
+              </div>
+            </div>
+            <pre id="quote-discord-preview" class="bg-maritime-900 p-3 rounded-xl text-xs text-slate-300 font-mono whitespace-pre-wrap border border-maritime-700 custom-scrollbar max-h-48 overflow-y-auto"></pre>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- TAB 2: DISCORD POST TEMPLATES -->
+    <div id="posts-section" class="hidden space-y-8">
+      
+      <div class="bg-maritime-800/80 border border-maritime-600/40 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-2xl font-cinzel font-bold text-amber-400 mb-2 flex items-center gap-3">
+          <i class="fa-brands fa-discord"></i> <span data-i18n="templatesHeader">Plantillas Listas para Discord</span>
+        </h2>
+        <p class="text-slate-300 text-sm" data-i18n="templatesSub">
+          Copia estas plantillas directamente con formato markdown completo para pegarlas en los canales de tu servidor de Discord.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Card 1: Resumen de Servicios -->
+        <div class="bg-maritime-800 border border-maritime-600/40 rounded-2xl p-5 flex flex-col justify-between shadow-xl space-y-4">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-cinzel font-bold text-amber-400 text-lg" data-i18n="card1Title">1. Resumen de Servicios</h3>
+              <span class="text-xs bg-amber-500/10 text-amber-400 px-2 py-1 rounded border border-amber-500/20" data-i18n="card1Badge">Español & Inglés</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-3" data-i18n="card1Sub">Ideal para el canal de bienvenida o información general (máx 150 caracteres por idioma).</p>
+            
+            <pre id="post-text-1" class="bg-maritime-900 p-3 rounded-xl text-xs text-slate-300 font-mono whitespace-pre-wrap border border-maritime-700 custom-scrollbar h-48 overflow-y-auto">⚓ **ToM - Logistics** (ES)
+Fletes de hasta 70t 100% seguros con Tratado de Paz, acopio de 6.400t y compras para piratas con entrega barco a barco.
+
+⚓ **ToM - Logistics** (EN)
+Safe 70t freight using Peace Treaty, 6,400t storage network, and pirate procurement with ship-to-ship delivery.</pre>
+          </div>
+
+          <button onclick="copyPost('post-text-1')" class="w-full py-2.5 bg-maritime-700 hover:bg-maritime-600 text-amber-400 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm border border-maritime-600">
+            <i class="fa-solid fa-copy"></i> <span data-i18n="copyTextBtn">Copiar Texto</span>
+          </button>
+        </div>
+
+        <!-- Card 2: Sistema de Tarifas -->
+        <div class="bg-maritime-800 border border-maritime-600/40 rounded-2xl p-5 flex flex-col justify-between shadow-xl space-y-4">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-cinzel font-bold text-amber-400 text-lg" data-i18n="card2Title">2. Tarifario Oficial</h3>
+              <span class="text-xs bg-amber-500/10 text-amber-400 px-2 py-1 rounded border border-amber-500/20" data-i18n="card2Badge">Precios y Fórmulas</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-3" data-i18n="card2Sub">Publicar en canal `#tarifas` o `#precios`.</p>
+
+            <pre id="post-text-2" class="bg-maritime-900 p-3 rounded-xl text-xs text-slate-300 font-mono whitespace-pre-wrap border border-maritime-700 custom-scrollbar h-48 overflow-y-auto"># ⚓ ToM - Transport of Materials
+### **Tarifario Oficial de Fletes & Logística (NA1)**
+
+> **Unidad Base:** 1 Cofre = 490 Oro
+> **Capacidad Máxima Neta:** 70 Toneladas
+
+---
+### 📦 **1. Flete por Distancia**
+* **Carga Completa (70 tn):** `5 Cofres / km` (2.450 Oro/km)
+* **Carga Parcial (1-35 tn):** `3 Cofres / km` (1.470 Oro/km)
+
+### 🔄 **2. Retorno e Ida/Vuelta**
+* **Ida Cargado / Regreso Vacío:** 100% km ida + 50% km regreso.
+* **Ida y Vuelta Cargado:** 20% descuento en km de regreso (4 Cofres/km).
+
+### ⚓ **3. Escalas y Cobertura**
+* **Escala Extra:** `+1 Cofre` por puerto adicional (máx 5).
+* **Tasa Cobertura PvP:** `+4 Cofres` por viaje (Tratado de Paz + Seguro).
+
+---
+🏴‍☠️ **Agente Pirata:** Compras en puertos restringidos + Entrega Ship-to-Ship en aguas neutrales (+15% comisión sobre costo material).</pre>
+          </div>
+
+          <button onclick="copyPost('post-text-2')" class="w-full py-2.5 bg-maritime-700 hover:bg-maritime-600 text-amber-400 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm border border-maritime-600">
+            <i class="fa-solid fa-copy"></i> <span data-i18n="copyTextBtn">Copiar Texto</span>
+          </button>
+        </div>
+
+        <!-- Card 3: Términos y Condiciones -->
+        <div class="bg-maritime-800 border border-maritime-600/40 rounded-2xl p-5 flex flex-col justify-between shadow-xl space-y-4">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-cinzel font-bold text-amber-400 text-lg" data-i18n="card3Title">3. Términos del Servicio</h3>
+              <span class="text-xs bg-amber-500/10 text-amber-400 px-2 py-1 rounded border border-amber-500/20" data-i18n="card3Badge">Reglas</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-3" data-i18n="card3Sub">Condiciones de pago, seguridad y reserva.</p>
+
+            <pre id="post-text-3" class="bg-maritime-900 p-3 rounded-xl text-xs text-slate-300 font-mono whitespace-pre-wrap border border-maritime-700 custom-scrollbar h-48 overflow-y-auto">📜 **Términos y Condiciones del Servicio - ToM**
+
+1. 💰 **Pago Adelantado:** Todo servicio de flete o compra intermediada requiere la liquidación total antes de zarpar.
+2. 🛡️ **Garantía Total:** Mediante la activación de **Tratado de Paz**, la carga está 100% garantizada frente a ataques en zona PvP.
+3. 📦 **Almacenamiento Hub:** Capacidad disponible de hasta 6.400 tn reservable por semana.
+4. 🤝 **Neutralidad:** ToM es una entidad de transporte independiente y neutral para todas las facciones.
+
+📩 *Para solicitar un flete, abre un ticket o envía mensaje privado.*</pre>
+          </div>
+
+          <button onclick="copyPost('post-text-3')" class="w-full py-2.5 bg-maritime-700 hover:bg-maritime-600 text-amber-400 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm border border-maritime-600">
+            <i class="fa-solid fa-copy"></i> <span data-i18n="copyTextBtn">Copiar Texto</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-maritime-900 border-t border-maritime-700/50 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <p data-i18n="footerCopy">© 2026 ToM - Transport of Materials. Operando en el servidor NA1.</p>
+      <p class="text-amber-400 font-medium" data-i18n="footerRates">1 Cofre = 490 Oro | Tarifa Base = 5 Cofres/KM</p>
+    </div>
+  </footer>
+
+  <!-- Script Code Logic -->
+  <script>
+    const CHEST_GOLD_VALUE = 490;
+    let currentAppLang = 'es';
+    let currentPreviewLang = 'es';
+
+    // Translations Dictionary
+    const translations = {
+      es: {
+        navCalc: "Cotizador",
+        navPosts: "Plantillas Discord",
+        subtitle: "Gestor de Discord & Cotizador Oficial (Servidor NA1)",
+        bannerTitle: "Valores Base de Referencia:",
+        bannerDesc: "1 Cofre = <strong>490 Oro</strong> | Capacidad Comercial Neta: <strong>70 Toneladas</strong> (reservando 9.2tn para provisiones).",
+        paramsTitle: "Parámetros del Viaje",
+        labelDistance: "Distancia del Recorrido (KM)",
+        labelCargoType: "Tipo de Carga",
+        cargoFullTitle: "Carga Completa (70 tn)",
+        cargoFullSub: "5 Cofres / km (2.450 Oro/km)",
+        cargoPartTitle: "Carga Parcial (1-35 tn)",
+        cargoPartSub: "3 Cofres / km (1.470 Oro/km)",
+        labelReturnMode: "Modalidad de Retorno",
+        returnEmptyTitle: "Ida Cargado / Regreso Vacío",
+        returnEmptySub: "+50% tarifa km retorno (2.5 cofres/km)",
+        returnLoadedTitle: "Ida y Vuelta Cargado",
+        returnLoadedSub: "20% Descuento en km retorno (4 cofres/km)",
+        labelExtraPorts: "Puertos Adicionales / Escalas",
+        portOpt0: "Solo Puerto Destino Directo (+0 Cofres)",
+        portOpt1: "1 Puerto Adicional (+1 Cofre / 490 Oro)",
+        portOpt2: "2 Puertos Adicionales (+2 Cofres / 980 Oro)",
+        portOpt3: "3 Puertos Adicionales (+3 Cofres / 1.470 Oro)",
+        portOpt4: "4 Puertos Adicionales (+4 Cofres / 1.960 Oro)",
+        pvpTitle: "Cobertura Zona PvP",
+        pvpSub: "Tratado de Paz + Seguro de Viaje (+4 Cofres fijación ida/vuelta)",
+        pirateTitle: "Agente de Compras Pirata",
+        pirateSub: "Adquisición en puerto restringido + Entrega Barco a Barco (+15% comisión)",
+        pirateInputLabel: "Costo de Materiales en Puerto Restringido (en Oro):",
+        receiptTitle: "Desglose de Cotización",
+        resDistLabel: "Distancia Total Recorrida:",
+        resDistanceFeeLabel: "Flete por Distancia:",
+        resStopsLabel: "Escalas Adicionales:",
+        resPvpLabel: "Tasa Cobertura PvP (Tratado/Seguro):",
+        resPirateLabel: "Materiales + Comisión Pirata (15%):",
+        totalChestsLabel: "Total en Cofres:",
+        chestWord: "Cofres",
+        totalGoldLabel: "Total en Oro Equivalente:",
+        btnCopyEs: "Copiar (ES)",
+        btnCopyEn: "Copy Quote (EN)",
+        previewTitle: "Vista Previa del Mensaje Discord:",
+        templatesHeader: "Plantillas Listas para Discord",
+        templatesSub: "Copia estas plantillas directamente con formato markdown completo para pegarlas en los canales de tu servidor de Discord.",
+        card1Title: "1. Resumen de Servicios",
+        card1Badge: "Español & Inglés",
+        card1Sub: "Ideal para el canal de bienvenida o información general (máx 150 caracteres por idioma).",
+        card2Title: "2. Tarifario Oficial",
+        card2Badge: "Precios y Fórmulas",
+        card2Sub: "Publicar en canal `#tarifas` o `#precios`.",
+        card3Title: "3. Términos del Servicio",
+        card3Badge: "Reglas",
+        card3Sub: "Condiciones de pago, seguridad y reserva.",
+        copyTextBtn: "Copiar Texto",
+        footerCopy: "© 2026 ToM - Transport of Materials. Operando en el servidor NA1.",
+        footerRates: "1 Cofre = 490 Oro | Tarifa Base = 5 Cofres/KM"
+      },
+      en: {
+        navCalc: "Calculator",
+        navPosts: "Discord Templates",
+        subtitle: "Discord Manager & Official Freight Calculator (NA1 Server)",
+        bannerTitle: "Base Reference Values:",
+        bannerDesc: "1 Chest = <strong>490 Gold</strong> | Net Commercial Capacity: <strong>70 Tons</strong> (reserving 9.2t for supplies).",
+        paramsTitle: "Journey Parameters",
+        labelDistance: "Route Distance (KM)",
+        labelCargoType: "Cargo Type",
+        cargoFullTitle: "Full Freight (70 tn)",
+        cargoFullSub: "5 Chests / km (2,450 Gold/km)",
+        cargoPartTitle: "Partial Freight (1-35 tn)",
+        cargoPartSub: "3 Chests / km (1,470 Gold/km)",
+        labelReturnMode: "Return Mode",
+        returnEmptyTitle: "Loaded Outbound / Empty Return",
+        returnEmptySub: "+50% return km rate (2.5 chests/km)",
+        returnLoadedTitle: "Loaded Round Trip",
+        returnLoadedSub: "20% Discount on return km (4 chests/km)",
+        labelExtraPorts: "Additional Ports / Stops",
+        portOpt0: "Direct Destination Port Only (+0 Chests)",
+        portOpt1: "1 Additional Port (+1 Chest / 490 Gold)",
+        portOpt2: "2 Additional Ports (+2 Chests / 980 Gold)",
+        portOpt3: "3 Additional Ports (+3 Chests / 1,470 Gold)",
+        portOpt4: "4 Additional Ports (+4 Chests / 1,960 Gold)",
+        pvpTitle: "PvP Zone Coverage",
+        pvpSub: "Peace Treaty + Travel Insurance (+4 Chests round-trip flat)",
+        pirateTitle: "Pirate Procurement Agent",
+        pirateSub: "Restricted port acquisition + Ship-to-Ship Delivery (+15% fee)",
+        pirateInputLabel: "Material Cost in Restricted Port (in Gold):",
+        receiptTitle: "Quote Breakdown",
+        resDistLabel: "Total Distance Traveled:",
+        resDistanceFeeLabel: "Distance Freight:",
+        resStopsLabel: "Additional Stops:",
+        resPvpLabel: "PvP Coverage Fee (Treaty/Insurance):",
+        resPirateLabel: "Materials + Pirate Fee (15%):",
+        totalChestsLabel: "Total in Chests:",
+        chestWord: "Chests",
+        totalGoldLabel: "Total in Equivalent Gold:",
+        btnCopyEs: "Copiar (ES)",
+        btnCopyEn: "Copy Quote (EN)",
+        previewTitle: "Discord Message Preview:",
+        templatesHeader: "Ready-to-Use Discord Templates",
+        templatesSub: "Copy these templates directly with full markdown formatting to paste into your Discord server channels.",
+        card1Title: "1. Services Summary",
+        card1Badge: "Spanish & English",
+        card1Sub: "Ideal for welcome channel or general info (max 150 chars per language).",
+        card2Title: "2. Official Pricing",
+        card2Badge: "Prices & Formulas",
+        card2Sub: "Publish in `#pricing` or `#rates` channel.",
+        card3Title: "3. Terms of Service",
+        card3Badge: "Rules",
+        card3Sub: "Payment, security, and reservation conditions.",
+        copyTextBtn: "Copy Text",
+        footerCopy: "© 2026 ToM - Transport of Materials. Operating on NA1 server.",
+        footerRates: "1 Chest = 490 Gold | Base Rate = 5 Chests/KM"
+      }
+    };
+
+    // Set Global App Language (Top Buttons)
+    function setAppLanguage(lang) {
+      currentAppLang = lang;
+      currentPreviewLang = lang;
+
+      const btnEs = document.getElementById('lang-btn-es');
+      const btnEn = document.getElementById('lang-btn-en');
+      const prevEs = document.getElementById('prev-lang-es');
+      const prevEn = document.getElementById('prev-lang-en');
+
+      if (lang === 'es') {
+        btnEs.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-400 text-maritime-900 shadow";
+        btnEn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
+        if(prevEs && prevEn) {
+          prevEs.className = "text-[10px] px-2 py-0.5 rounded bg-amber-400 text-maritime-900 font-bold";
+          prevEn.className = "text-[10px] px-2 py-0.5 rounded bg-maritime-900 text-slate-400 border border-maritime-600";
+        }
+      } else {
+        btnEn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-400 text-maritime-900 shadow";
+        btnEs.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
+        if(prevEs && prevEn) {
+          prevEn.className = "text-[10px] px-2 py-0.5 rounded bg-amber-400 text-maritime-900 font-bold";
+          prevEs.className = "text-[10px] px-2 py-0.5 rounded bg-maritime-900 text-slate-400 border border-maritime-600";
+        }
+      }
+
+      // Update all elements with data-i18n attribute
+      const elements = document.querySelectorAll('[data-i18n]');
+      elements.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang] && translations[lang][key]) {
+          el.innerHTML = translations[lang][key];
+        }
+      });
+
+      calculateQuote();
+    }
+
+    // Tab Switching
+    function switchTab(tab) {
+      const calcSection = document.getElementById('calculator-section');
+      const postsSection = document.getElementById('posts-section');
+      const calcBtn = document.getElementById('tab-calc-btn');
+      const postsBtn = document.getElementById('tab-posts-btn');
+
+      if (tab === 'calculator') {
+        calcSection.classList.remove('hidden');
+        postsSection.classList.add('hidden');
+        
+        calcBtn.className = "px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 bg-maritime-accent text-maritime-900 shadow";
+        postsBtn.className = "px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 text-slate-300 hover:text-white hover:bg-maritime-700";
+      } else {
+        calcSection.classList.add('hidden');
+        postsSection.classList.remove('hidden');
+
+        postsBtn.className = "px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 bg-maritime-accent text-maritime-900 shadow";
+        calcBtn.className = "px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 text-slate-300 hover:text-white hover:bg-maritime-700";
+      }
+    }
+
+    // Distance Input Sync
+    function syncDistanceInput(val) {
+      const numVal = Math.max(1, parseInt(val) || 1);
+      document.getElementById('input-distance').value = Math.min(numVal, 100);
+      document.getElementById('input-distance-num').value = numVal;
+      calculateQuote();
+    }
+
+    // Toggle Pirate Inputs
+    function togglePirateInput() {
+      const isChecked = document.getElementById('toggle-pirate').checked;
+      const container = document.getElementById('pirate-cost-container');
+      if (isChecked) {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    function setPreviewLang(lang) {
+      currentPreviewLang = lang;
+      const btnEs = document.getElementById('prev-lang-es');
+      const btnEn = document.getElementById('prev-lang-en');
+
+      if (lang === 'es') {
+        btnEs.className = "text-[10px] px-2 py-0.5 rounded bg-amber-400 text-maritime-900 font-bold";
+        btnEn.className = "text-[10px] px-2 py-0.5 rounded bg-maritime-900 text-slate-400 border border-maritime-600";
+      } else {
+        btnEn.className = "text-[10px] px-2 py-0.5 rounded bg-amber-400 text-maritime-900 font-bold";
+        btnEs.className = "text-[10px] px-2 py-0.5 rounded bg-maritime-900 text-slate-400 border border-maritime-600";
+      }
+      calculateQuote();
+    }
+
+    // Calculation Engine
+    function calculateQuote() {
+      const distance = parseInt(document.getElementById('input-distance-num').value) || 1;
+      document.getElementById('input-distance').value = Math.min(distance, 100);
+      document.getElementById('dist-val-display').innerText = `${distance} km`;
+
+      const cargoType = document.querySelector('input[name="cargo-type"]:checked').value;
+      const returnMode = document.querySelector('input[name="return-mode"]:checked').value;
+      const extraPorts = parseInt(document.getElementById('input-extra-ports').value) || 0;
+      const isPvp = document.getElementById('toggle-pvp').checked;
+      const isPirate = document.getElementById('toggle-pirate').checked;
+      const pirateMatCost = parseFloat(document.getElementById('input-pirate-material-cost').value) || 0;
+
+      document.getElementById('extra-ports-display').innerText = extraPorts > 0 ? `+${extraPorts} Extra` : '0 Extra';
+
+      let ratePerKmOutbound = (cargoType === 'full') ? 5 : 3;
+      let ratePerKmReturn = 0;
+
+      if (returnMode === 'empty') {
+        ratePerKmReturn = ratePerKmOutbound * 0.5;
+      } else {
+        ratePerKmReturn = (cargoType === 'full') ? 4 : 2.4;
+      }
+
+      const outboundFreight = distance * ratePerKmOutbound;
+      const returnFreight = distance * ratePerKmReturn;
+      const totalDistanceCostChests = outboundFreight + returnFreight;
+      const totalKmTraveled = distance * 2;
+      const stopsCostChests = extraPorts * 1;
+      const pvpCostChests = isPvp ? 4 : 0;
+
+      const grandTotalChests = totalDistanceCostChests + stopsCostChests + pvpCostChests;
+      let grandTotalGold = grandTotalChests * CHEST_GOLD_VALUE;
+
+      let pirateCommissionGold = 0;
+      let totalPirateCostGold = 0;
+      const pirateRow = document.getElementById('out-pirate-row');
+
+      if (isPirate) {
+        pirateCommissionGold = pirateMatCost * 0.15;
+        totalPirateCostGold = pirateMatCost + pirateCommissionGold;
+        grandTotalGold += totalPirateCostGold;
+        
+        pirateRow.classList.remove('hidden');
+        document.getElementById('out-pirate-cost').innerText = `${totalPirateCostGold.toLocaleString()} Oro`;
+      } else {
+        pirateRow.classList.add('hidden');
+      }
+
+      // Update UI Outputs
+      document.getElementById('out-dist-km').innerText = `${totalKmTraveled} km (Ida/Vuelta)`;
+      document.getElementById('out-flete-cost').innerText = `${totalDistanceCostChests} ${currentAppLang === 'en' ? 'Chests' : 'Cofres'}`;
+      document.getElementById('out-stops-cost').innerText = `${stopsCostChests} ${currentAppLang === 'en' ? 'Chests' : 'Cofres'}`;
+      document.getElementById('out-pvp-cost').innerText = `${pvpCostChests} ${currentAppLang === 'en' ? 'Chests' : 'Cofres'}`;
+
+      const chestWordText = currentAppLang === 'en' ? 'Chests' : 'Cofres';
+      document.getElementById('out-total-chests').innerHTML = `${grandTotalChests} <span class="text-sm font-normal text-slate-400">${chestWordText}</span>`;
+      document.getElementById('out-total-gold').innerHTML = `${Math.round(grandTotalGold).toLocaleString()} <span class="text-xs font-normal text-amber-400">ORO</span>`;
+
+      const quoteData = {
+        distance,
+        totalKmTraveled,
+        cargoType,
+        returnMode,
+        extraPorts,
+        isPvp,
+        isPirate,
+        pirateMatCost,
+        pirateCommissionGold,
+        grandTotalChests,
+        grandTotalGold
+      };
+
+      document.getElementById('quote-discord-preview').innerText = generateDiscordQuoteString(quoteData, currentPreviewLang);
+    }
+
+    // Helper to generate formatted string for Discord (Supports ES and EN)
+    function generateDiscordQuoteString(d, lang = 'es') {
+      if (lang === 'en') {
+        let cargoStr = d.cargoType === 'full' ? 'Full Freight (70 tons)' : 'Partial Freight (1-35 tons)';
+        let returnStr = d.returnMode === 'empty' ? 'Empty Return' : 'Loaded Round Trip';
+        
+        let msg = `📜 **OFFICIAL FREIGHT QUOTE - ToM**\n`;
+        msg += `─────────────\n`;
+        msg += `📍 **Distance:** ${d.distance} km (${d.totalKmTraveled} km total trip)\n`;
+        msg += `📦 **Cargo:** ${cargoStr}\n`;
+        msg += `🔄 **Return:** ${returnStr}\n`;
+        if (d.extraPorts > 0) msg += `⚓ **Extra Stops:** ${d.extraPorts} additional port(s)\n`;
+        if (d.isPvp) msg += `🛡️ **PvP Coverage:** Included (Active Peace Treaty)\n`;
+        
+        if (d.isPirate) {
+          msg += `🏴‍☠️ **Pirate Service:** Materials (${d.pirateMatCost.toLocaleString()} Gold) + 15% Fee (${d.pirateCommissionGold.toLocaleString()} Gold)\n`;
+        }
+        
+        msg += `─────────────\n`;
+        msg += `💰 **TOTAL AMOUNT:** **${d.grandTotalChests} Supply Chests** *(or ${Math.round(d.grandTotalGold).toLocaleString()} Gold)*\n`;
+        msg += `📌 *Payment required in advance prior to departure.*`;
+
+        return msg;
+      } else {
+        let cargoStr = d.cargoType === 'full' ? 'Completa (70 tn)' : 'Parcial (1-35 tn)';
+        let returnStr = d.returnMode === 'empty' ? 'Regreso Vacío' : 'Ida y Vuelta Cargado';
+
+        let msg = `📜 **COTIZACIÓN OFICIAL DE FLETE - ToM**\n`;
+        msg += `─────────────\n`;
+        msg += `📍 **Distancia:** ${d.distance} km (${d.totalKmTraveled} km recorrido total)\n`;
+        msg += `📦 **Carga:** ${cargoStr}\n`;
+        msg += `🔄 **Retorno:** ${returnStr}\n`;
+        if (d.extraPorts > 0) msg += `⚓ **Escalas:** ${d.extraPorts} puerto(s) adicional(es)\n`;
+        if (d.isPvp) msg += `🛡️ **Cobertura PvP:** Incluida (Tratado de Paz activo)\n`;
+        
+        if (d.isPirate) {
+          msg += `🏴‍☠️ **Servicio Pirata:** Materiales (${d.pirateMatCost.toLocaleString()} Oro) + 15% Comisión (${d.pirateCommissionGold.toLocaleString()} Oro)\n`;
+        }
+        
+        msg += `─────────────\n`;
+        msg += `💰 **TOTAL A PAGAR:** **${d.grandTotalChests} Cofres** *(ó ${Math.round(d.grandTotalGold).toLocaleString()} de Oro)*\n`;
+        msg += `📌 *Pago requerido por adelantado antes de zarpar.*`;
+
+        return msg;
+      }
+    }
+
+    // Copy Quote to Clipboard in requested language
+    function copyQuoteToClipboard(lang = 'es') {
+      const distance = parseInt(document.getElementById('input-distance-num').value) || 1;
+      const cargoType = document.querySelector('input[name="cargo-type"]:checked').value;
+      const returnMode = document.querySelector('input[name="return-mode"]:checked').value;
+      const extraPorts = parseInt(document.getElementById('input-extra-ports').value) || 0;
+      const isPvp = document.getElementById('toggle-pvp').checked;
+      const isPirate = document.getElementById('toggle-pirate').checked;
+      const pirateMatCost = parseFloat(document.getElementById('input-pirate-material-cost').value) || 0;
+
+      let ratePerKmOutbound = (cargoType === 'full') ? 5 : 3;
+      let ratePerKmReturn = (returnMode === 'empty') ? (ratePerKmOutbound * 0.5) : (cargoType === 'full' ? 4 : 2.4);
+
+      const outboundFreight = distance * ratePerKmOutbound;
+      const returnFreight = distance * ratePerKmReturn;
+      const totalDistanceCostChests = outboundFreight + returnFreight;
+      const totalKmTraveled = distance * 2;
+      const stopsCostChests = extraPorts * 1;
+      const pvpCostChests = isPvp ? 4 : 0;
+      const grandTotalChests = totalDistanceCostChests + stopsCostChests + pvpCostChests;
+      let grandTotalGold = grandTotalChests * CHEST_GOLD_VALUE;
+
+      let pirateCommissionGold = 0;
+      if (isPirate) {
+        pirateCommissionGold = pirateMatCost * 0.15;
+        grandTotalGold += (pirateMatCost + pirateCommissionGold);
+      }
+
+      const quoteData = {
+        distance,
+        totalKmTraveled,
+        cargoType,
+        returnMode,
+        extraPorts,
+        isPvp,
+        isPirate,
+        pirateMatCost,
+        pirateCommissionGold,
+        grandTotalChests,
+        grandTotalGold
+      };
+
+      const quoteText = generateDiscordQuoteString(quoteData, lang);
+      const msg = lang === 'en' ? "English quote copied to clipboard!" : "¡Cotización en Español copiada al portapapeles!";
+      copyToClipboardRaw(quoteText, msg);
+    }
+
+    // Copy Template Posts
+    function copyPost(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      copyToClipboardRaw(text, currentAppLang === 'en' ? "Template copied with Discord formatting." : "Plantilla copiada con formato Discord.");
+    }
+
+    // Generic Clipboard Helper using execCommand for maximum iframe compatibility
+    function copyToClipboardRaw(text, successMsg) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      try {
+        document.execCommand('copy');
+        showToast(successMsg);
+      } catch (err) {
+        showToast(currentAppLang === 'en' ? "Error copying to clipboard." : "Error al copiar al portapapeles.", true);
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+
+    // Toast Notification
+    function showToast(message, isError = false) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      toast.className = `p-4 rounded-xl shadow-2xl border text-sm font-semibold flex items-center gap-3 transition-all transform translate-y-2 opacity-0 ${
+        isError 
+          ? 'bg-red-900 border-red-500 text-red-100' 
+          : 'bg-maritime-800 border-amber-400 text-amber-300'
+      }`;
+
+      toast.innerHTML = `<i class="fa-solid ${isError ? 'fa-triangle-exclamation' : 'fa-circle-check'} text-lg"></i> <span>${message}</span>`;
+      
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => {
+          if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 300);
+      }, 3000);
+    }
+
+    // Initialize on Load
+    window.onload = function() {
+      setAppLanguage('es');
+    };
+  </script>
+</body>
+</html>
